@@ -1,0 +1,135 @@
+[
+  {
+    "skill": "python",
+    "course": "Python for Everybody Specialization",
+    "platform": "Coursera",
+    "priority": "high",
+    "url": "https://www.coursera.org/specializations/python"
+  },
+  {
+    "skill": "fastapi",
+    "course": "FastAPI - The Complete Course 2026",
+    "platform": "Udemy",
+    "priority": "high",
+    "url": "https://fastapi.tiangolo.com/tutorial/"
+  },
+  {
+    "skill": "flask",
+    "course": "Flask Web Development Mega-Tutorial",
+    "platform": "Miguel Grinberg",
+    "priority": "medium",
+    "url": "https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-i-hello-world"
+  },
+  {
+    "skill": "django",
+    "course": "Django for Beginners & REST APIs",
+    "platform": "YouTube / freeCodeCamp",
+    "priority": "medium",
+    "url": "https://www.djangoproject.com/start/"
+  },
+  {
+    "skill": "docker",
+    "course": "Docker for Beginners & Containers in Depth",
+    "platform": "Docker Docs & freeCodeCamp",
+    "priority": "high",
+    "url": "https://docs.docker.com/get-started/"
+  },
+  {
+    "skill": "kubernetes",
+    "course": "Kubernetes Mastery: Hands-On Cluster Management",
+    "platform": "YouTube / edX",
+    "priority": "medium",
+    "url": "https://kubernetes.io/docs/tutorials/"
+  },
+  {
+    "skill": "aws",
+    "course": "AWS Cloud Practitioner & Developer Essentials",
+    "platform": "AWS Skill Builder",
+    "priority": "high",
+    "url": "https://explore.skillbuilder.aws/"
+  },
+  {
+    "skill": "postgresql",
+    "course": "PostgreSQL Bootcamp & Database Administration",
+    "platform": "freeCodeCamp",
+    "priority": "high",
+    "url": "https://www.postgresql.org/docs/"
+  },
+  {
+    "skill": "redis",
+    "course": "Redis for Backend Developers (RU101)",
+    "platform": "Redis University",
+    "priority": "medium",
+    "url": "https://university.redis.com/"
+  },
+  {
+    "skill": "kafka",
+    "course": "Apache Kafka Fundamentals & Event Streaming",
+    "platform": "Confluent Developer",
+    "priority": "medium",
+    "url": "https://developer.confluent.io/learn/kafka-fundamentals/"
+  },
+  {
+    "skill": "ci/cd",
+    "course": "Continuous Integration & Deployment with GitHub Actions",
+    "platform": "GitHub Skills",
+    "priority": "high",
+    "url": "https://skills.github.com/"
+  },
+  {
+    "skill": "git",
+    "course": "Pro Git & Advanced Version Control Workflows",
+    "platform": "Git SCM",
+    "priority": "high",
+    "url": "https://git-scm.com/book/en/v2"
+  },
+  {
+    "skill": "linux",
+    "course": "Linux Command Line Basics & Server Administration",
+    "platform": "Linux Foundation",
+    "priority": "high",
+    "url": "https://www.linux.org/"
+  },
+  {
+    "skill": "javascript",
+    "course": "Modern JavaScript from the Beginning",
+    "platform": "freeCodeCamp",
+    "priority": "medium",
+    "url": "https://javascript.info/"
+  },
+  {
+    "skill": "typescript",
+    "course": "TypeScript Handbook & Practical Projects",
+    "platform": "TypeScript Official",
+    "priority": "medium",
+    "url": "https://www.typescriptlang.org/docs/"
+  },
+  {
+    "skill": "react",
+    "course": "Full Stack React & Modern Hooks",
+    "platform": "React Docs",
+    "priority": "medium",
+    "url": "https://react.dev/learn"
+  },
+  {
+    "skill": "node.js",
+    "course": "Node.js Complete Guide (REST APIs, Microservices)",
+    "platform": "Nodejs.org & freeCodeCamp",
+    "priority": "medium",
+    "url": "https://nodejs.org/en/learn"
+  },
+  {
+    "skill": "graphql",
+    "course": "GraphQL Full Course - Beginner to Advanced",
+    "platform": "freeCodeCamp",
+    "priority": "low",
+    "url": "https://graphql.org/learn/"
+  },
+  {
+    "skill": "celery",
+    "course": "Distributed Task Queues with Python Celery",
+    "platform": "Celery Project Docs",
+    "priority": "medium",
+    "url": "https://docs.celeryq.dev/en/stable/getting-started/"
+  }
+]

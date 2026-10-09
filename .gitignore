@@ -1,0 +1,30 @@
+# Virtual Environment
+venv/
+env/
+.venv/
+ENV/
+
+# Environment Variables & Secrets
+.env
+.env.local
+*.env
+
+# Python Bytecode & Cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+
+# Temporary & Log files
+*.log
+*.tmp
+temp_*.pdf
+
+# Operating System & IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace

@@ -1,0 +1,32 @@
+Backend Developer
+
+We are looking for a Backend Developer to build scalable and reliable
+backend services.
+
+Requirements:
+
+- Strong programming skills in Python
+- Experience with FastAPI or Flask
+- Strong knowledge of REST APIs
+- Experience with PostgreSQL or MySQL
+- Knowledge of Redis
+- Experience with Docker
+- Knowledge of AWS
+- Understanding of Git
+- Good understanding of Linux
+- Knowledge of Celery is a plus
+
+Education:
+
+Bachelor's degree in Computer Science, Information Technology,
+or a related field.
+
+Experience:
+
+0-2 years of backend development experience.
+
+Preferred:
+
+- Kubernetes
+- Kafka
+- CI/CD
