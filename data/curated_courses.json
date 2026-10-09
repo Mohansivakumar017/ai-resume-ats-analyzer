@@ -1,0 +1,114 @@
+[
+  {
+    "skill": "python",
+    "course": "Python for Everybody Specialization",
+    "platform": "Coursera / University of Michigan",
+    "url": "https://www.coursera.org/specializations/python",
+    "level": "Beginner to Intermediate"
+  },
+  {
+    "skill": "fastapi",
+    "course": "FastAPI Complete Modern API Development",
+    "platform": "FastAPI Official Tutorial & freeCodeCamp",
+    "url": "https://fastapi.tiangolo.com/tutorial/",
+    "level": "Intermediate"
+  },
+  {
+    "skill": "flask",
+    "course": "Flask Web Development Mega-Tutorial",
+    "platform": "Miguel Grinberg Blog",
+    "url": "https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-i-hello-world",
+    "level": "Beginner to Intermediate"
+  },
+  {
+    "skill": "django",
+    "course": "Django for Beginners & REST Framework",
+    "platform": "Django Project Documentation",
+    "url": "https://www.djangoproject.com/start/",
+    "level": "Intermediate"
+  },
+  {
+    "skill": "docker",
+    "course": "Docker for Developers: Hands-on Containers",
+    "platform": "Docker Docs & freeCodeCamp",
+    "url": "https://docs.docker.com/get-started/",
+    "level": "Beginner to Intermediate"
+  },
+  {
+    "skill": "kubernetes",
+    "course": "Kubernetes Mastery: Hands-On Cluster Management",
+    "platform": "edX / CNCF Official",
+    "url": "https://kubernetes.io/docs/tutorials/",
+    "level": "Intermediate to Advanced"
+  },
+  {
+    "skill": "aws",
+    "course": "AWS Certified Developer & Solutions Architect Training",
+    "platform": "AWS Skill Builder",
+    "url": "https://explore.skillbuilder.aws/",
+    "level": "Intermediate"
+  },
+  {
+    "skill": "postgresql",
+    "course": "PostgreSQL Mastery & Query Optimization",
+    "platform": "PostgreSQL Documentation & freeCodeCamp",
+    "url": "https://www.postgresql.org/docs/",
+    "level": "Intermediate"
+  },
+  {
+    "skill": "redis",
+    "course": "Redis for High-Performance Caching & Queues",
+    "platform": "Redis University",
+    "url": "https://university.redis.com/",
+    "level": "Intermediate"
+  },
+  {
+    "skill": "kafka",
+    "course": "Apache Kafka Fundamentals & Event Streaming",
+    "platform": "Confluent Developer",
+    "url": "https://developer.confluent.io/learn/kafka-fundamentals/",
+    "level": "Intermediate to Advanced"
+  },
+  {
+    "skill": "ci/cd",
+    "course": "Automated Pipelines with GitHub Actions & CI/CD",
+    "platform": "GitHub Skills",
+    "url": "https://skills.github.com/",
+    "level": "Beginner to Intermediate"
+  },
+  {
+    "skill": "git",
+    "course": "Pro Git & Collaborative Workflows",
+    "platform": "Git SCM",
+    "url": "https://git-scm.com/book/en/v2",
+    "level": "Beginner to Intermediate"
+  },
+  {
+    "skill": "linux",
+    "course": "Linux Foundation System Administration Essentials",
+    "platform": "Linux Foundation",
+    "url": "https://www.linuxfoundation.org/",
+    "level": "Beginner to Intermediate"
+  },
+  {
+    "skill": "react",
+    "course": "Modern React 19 & Next.js Full Stack",
+    "platform": "React Docs",
+    "url": "https://react.dev/learn",
+    "level": "Beginner to Advanced"
+  },
+  {
+    "skill": "typescript",
+    "course": "TypeScript In-Depth & Enterprise Patterns",
+    "platform": "TypeScript Official Docs",
+    "url": "https://www.typescriptlang.org/docs/",
+    "level": "Intermediate"
+  },
+  {
+    "skill": "system design",
+    "course": "System Design Primer & Scalable Architecture",
+    "platform": "GitHub System Design Primer",
+    "url": "https://github.com/donnemartin/system-design-primer",
+    "level": "Intermediate to Advanced"
+  }
+]

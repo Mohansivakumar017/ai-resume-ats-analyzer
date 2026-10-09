@@ -1,7 +1,10 @@
-# Virtual Environment
+# Virtual Environments
 venv/
-env/
+venv
 .venv/
+.venv
+env/
+env
 ENV/
 
 # Environment Variables & Secrets

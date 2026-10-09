@@ -1,165 +1,210 @@
-# 🤖 AI Resume ATS Analyzer & Telegram Bot
+<div align="center">
 
-An intelligent, AI-powered Applicant Tracking System (ATS) bot built with **Python**, **Google Gemini**, and **Telegram Bot API**. It analyzes candidate resumes against job descriptions, computes an ATS compatibility score, detects skill gaps, recommends tailored resume improvements, and suggests curated learning courses.
+# 🎯 AI Resume ATS Analyzer & Optimizer
 
----
+**Production-grade Applicant Tracking System (ATS) scoring engine and Telegram Bot powered by Google Gemini.**
 
-## ✨ Features
+[![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
+[![Google Gemini](https://img.shields.io/badge/AI-Google%20Gemini-orange.svg)](https://ai.google.dev/)
+[![Telegram Bot API](https://img.shields.io/badge/Telegram-Bot%20API-0088cc.svg)](https://core.telegram.org/bots/api)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Status](https://img.shields.io/badge/Build-Passing-brightgreen.svg)]()
 
-- 📄 **PDF Resume Extraction**: Parses and analyzes raw text directly from PDF resumes using `pypdf`.
-- 🧠 **AI Information Extraction**: Utilizes Google Gemini models to extract structured entities (skills, experience, education, projects, certifications).
-- 🎯 **ATS Compatibility Scoring (100 Points Total)**:
-  - **Required Skills Match**: 40 pts
-  - **Preferred Skills Match**: 15 pts
-  - **Experience Relevance**: 15 pts
-  - **Education & Field Match**: 10 pts
-  - **Resume Structure**: 10 pts
-  - **Keyword Coverage**: 10 pts
-- 🔍 **Skill Gap Analysis**: Identifies missing required skills vs. missing bonus/preferred skills.
-- 💡 **Actionable Resume Improvements**: Produces role-targeted suggestions using strong action verbs without fabricating details.
-- 📚 **Targeted Course Recommendations**: Maps skill gaps to curated courses and resources from Coursera, Udemy, YouTube, and official documentation.
-- 💬 **Interactive Telegram Bot**: Clean chat interface with document handling, multi-part reports, session management (`/start`, `/help`, `/reset`), and error handling.
-- 🛡️ **Resilient Architecture**: Centralized AI service with automatic model fallbacks (`gemini-3.5-flash`, `gemini-3.5-flash-lite`, etc.) and structured JSON responses.
+<p align="center">
+  Instant resume evaluation • 6-dimensional ATS match scoring • Actionable rewrite coaching • Personalized learning roadmaps
+</p>
+
+</div>
 
 ---
 
-## 🏗️ Architecture & Workflow
+## 📌 Overview
+
+Most job seekers get filtered out by Applicant Tracking Systems before a recruiter even reviews their resume. **AI Resume ATS Analyzer** simulates enterprise-grade ATS parsing algorithms to provide job applicants with deep, transparent feedback on how well their resume aligns with any target job description.
+
+Built with **Python**, **Google Gemini**, and the **Telegram Bot API**, the system extracts semantic resume entities, matches requirements (including complex compound skills like *FastAPI or Flask*), computes an objective compatibility score (0–100), offers concrete bullet point transformations with strong action verbs, and recommends curated learning resources for identified skill gaps.
+
+---
+
+## 🚀 Key Features
+
+- 📑 **Robust PDF Parsing**: Extracts text cleanly from PDF resumes without data corruption using `pypdf`.
+- 🧠 **Structured Entity Extraction**: Uses Google Gemini to reliably extract structured entities (Skills, Work History, Education, Projects, and Certifications).
+- ⚖️ **Dynamic 6-Dimensional Scoring (100 Pts)**:
+  - **Required Skills Match (40 pts)**: Exact & semantic verification of mandatory job competencies.
+  - **Preferred Skills Match (15 pts)**: Evaluation of bonus / nice-to-have qualifications.
+  - **Experience Relevance (15 pts)**: Automatic tenure calculation vs. required minimum years.
+  - **Education & Domain Fit (10 pts)**: Degree level and major alignment against job expectations.
+  - **Resume Structure (10 pts)**: Section completeness and formatting compliance.
+  - **Keyword Coverage (10 pts)**: Density and distribution of key domain vocabulary.
+- 💡 **AI Resume Coach ("Before & After")**: Rephrases passive bullet points into impactful achievements with metrics and industry-proven action verbs.
+- 📚 **Intelligent Learning Paths**: Combines a curated catalog of industry courses (Coursera, edX, Docker, AWS, Confluent) with dynamically generated learning links for novel skills.
+- 🤖 **Interactive Telegram Bot**: Fast, asynchronous chat interface with inline buttons, message splitting for long reports, and typing indicators.
+- 💻 **Standalone CLI Mode**: Evaluate any resume and job description directly from the command line for fast scripting and CI validation.
+
+---
+
+## 🏗️ Architecture
 
 ```mermaid
-graph TD
-    User([Telegram User]) -->|1. Uploads PDF Resume| Bot[bot.py]
-    User -->|2. Sends Job Description Text| Bot
-    Bot --> RA[resume_analyzer.py]
-    Bot --> JA[jd_analyzer.py]
-    RA -->|Extract text & structure| AIS[ai_service.py: Gemini AI]
-    JA -->|Extract requirements & skills| AIS
-    RA & JA --> Scorer[ats_scorer.py]
-    Scorer -->|Skill Match & Score Breakdown| Imp[improvement_generator.py]
-    Scorer -->|Missing Skills| Rec[course_recommender.py]
-    Rec --> Courses[(courses.json)]
-    Imp & Rec & Scorer --> Bot
-    Bot -->|Delivers ATS Compatibility Report| User
+flowchart TD
+    subgraph Inputs
+        A[PDF Resume] 
+        B[Job Description]
+    end
+
+    subgraph Core Engine [src/services]
+        RP[resume_parser.py]
+        JP[jd_parser.py]
+        GS[gemini_service.py: Gemini AI]
+        
+        A --> RP
+        B --> JP
+        RP --> GS
+        JP --> GS
+
+        RP & JP --> Scorer[ats_scorer.py: 6-Dimension Scorer]
+        Scorer --> Coach[improvement_generator.py: Rewrite Engine]
+        Scorer --> Courses[course_recommender.py: Learning Recommender]
+    end
+
+    subgraph Interfaces
+        CLI[cli.py: Command Line Tool]
+        Bot[src/bot.py: Telegram Bot]
+        Scorer & Coach & Courses --> CLI
+        Scorer & Coach & Courses --> Bot
+    end
 ```
 
 ---
 
-## 📁 Project Structure
+## 📁 Repository Structure
 
 ```text
 resume-ats-bot/
-├── ai_service.py              # Centralized Gemini AI client with model fallback & JSON mode
-├── ats_scorer.py              # Core ATS scoring algorithm & regex-based matching
-├── bot.py                     # Telegram bot application & interaction handlers
-├── course_recommender.py      # Skill gap to course mapping engine
-├── courses.json               # Curated learning resources database
-├── improvement_generator.py   # AI resume improvement generator
-├── jd_analyzer.py             # AI job description entity extractor
-├── job_description.txt        # Sample job description for testing
-├── resume.pdf                 # Sample PDF resume for testing
-├── resume_analyzer.py         # PDF text extractor & structured resume parser
-├── test_pipeline.py           # End-to-end integration test runner
-├── requirements.txt           # Python package dependencies
-├── .env.example               # Environment variables template
-├── .gitignore                 # Git ignore rules for virtualenvs and secrets
-└── README.md                  # Project documentation
+├── src/
+│   ├── config.py                 # Central configuration, scoring weights & paths
+│   ├── bot.py                    # Production-grade Telegram Bot application
+│   └── services/
+│       ├── gemini_service.py     # Gemini client with fallback models & JSON schema mode
+│       ├── resume_parser.py      # PDF text extractor & structured resume parser
+│       ├── jd_parser.py          # Job description analyzer
+│       ├── ats_scorer.py         # Dynamic 6-dimensional ATS scoring engine
+│       ├── improvement_generator.py # Actionable AI resume coach (Before vs. After)
+│       └── course_recommender.py # Hybrid course recommender (curated + AI roadmaps)
+├── data/
+│   └── curated_courses.json      # Structured database of verified courses & tutorials
+├── samples/
+│   ├── sample_resume.pdf         # Sample resume for verification
+│   └── sample_jd.txt             # Sample job description
+├── tests/
+│   └── test_ats_pipeline.py      # Standard unittest end-to-end integration suite
+├── bot.py                        # Telegram bot runner entrypoint
+├── cli.py                        # CLI evaluation runner
+├── requirements.txt              # Production dependencies
+├── .env.example                  # Environment configuration template
+└── README.md                     # Project documentation
 ```
 
 ---
 
-## 🚀 Getting Started
+## ⚙️ Quickstart & Setup
 
 ### 1. Prerequisites
-- **Python 3.10+**
-- A **Google Gemini API Key** (from [Google AI Studio](https://aistudio.google.com/))
-- A **Telegram Bot Token** (from [@BotFather](https://t.me/botfather) on Telegram)
+- Python 3.10 or higher
+- A [Google Gemini API Key](https://aistudio.google.com/)
+- A [Telegram Bot Token](https://t.me/botfather) (if running the Telegram bot)
 
-### 2. Clone the Repository
+### 2. Installation
+
 ```bash
+# Clone the repository
 git clone https://github.com/<your-username>/resume-ats-bot.git
 cd resume-ats-bot
-```
 
-### 3. Set Up Virtual Environment
-```bash
-python3 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+# Create and activate virtual environment
+python3 -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+
+# Install dependencies
 pip install -r requirements.txt
 ```
 
-### 4. Configure Environment Variables
-Copy the `.env.example` file to `.env`:
+### 3. Configure Environment Variables
+
+Copy the sample environment file:
 ```bash
 cp .env.example .env
 ```
 
-Edit `.env` and set your credentials:
+Set your credentials in `.env`:
 ```ini
-TELEGRAM_BOT_TOKEN="your_telegram_bot_token_here"
-GEMINI_API_KEY="your_gemini_api_key_here"
+TELEGRAM_BOT_TOKEN="your_telegram_bot_token"
+GEMINI_API_KEY="your_google_gemini_api_key"
 GEMINI_MODEL="gemini-3.5-flash"
 ```
 
 ---
 
-## 🧪 Testing the Pipeline
+## 💻 Usage
 
-You can run the end-to-end test script without starting the Telegram bot:
+### Option A: Run via CLI
+
+You can evaluate any resume and job description right in your terminal:
 
 ```bash
-python test_pipeline.py
+python cli.py --resume samples/sample_resume.pdf --jd samples/sample_jd.txt
 ```
 
-This will:
-1. Parse `resume.pdf`
-2. Parse `job_description.txt`
-3. Compute the ATS match score and breakdown
-4. Generate AI improvement suggestions
-5. Recommend tailored courses for missing skills
+### Option B: Run the Telegram Bot
 
----
-
-## 🤖 Running the Telegram Bot
-
-Start the Telegram bot service:
+Start the Telegram polling daemon:
 
 ```bash
 python bot.py
 ```
 
-Once running:
-1. Open Telegram and search for your bot username.
-2. Send `/start` to begin.
-3. Send your resume as a **PDF document**.
-4. Send your target **Job Description** as text.
-5. The bot will reply with your complete ATS score report, missing skills, improvements, and course links!
+Then in Telegram:
+1. Start the bot with `/start`.
+2. Upload your resume as a **PDF document**.
+3. Send the **Job Description** as a text message.
+4. Receive your detailed report, match scores, improvement tips, and learning links!
 
----
+### Option C: Run Integration Tests
 
-## 📤 Uploading to GitHub
-
-When you're ready to create a GitHub repository and push your code:
+Run the complete pipeline test suite:
 
 ```bash
-# 1. Initialize git (if not already initialized)
-git init
-
-# 2. Stage all clean project files
-git add .
-
-# 3. Verify that .env and venv are ignored
-git status
-
-# 4. Commit changes
-git commit -m "feat: initial clean release of Resume ATS Analyzer Bot"
-
-# 5. Create a new repository on GitHub (via GitHub web UI)
-# Then link your remote and push:
-git branch -M main
-git remote add origin https://github.com/<your-username>/<your-repo-name>.git
-git push -u origin main
+python -m unittest tests/test_ats_pipeline.py
 ```
 
 ---
 
+## 📊 ATS Scoring Dimensions
+
+| Dimension | Default Weight | Description |
+| :--- | :---: | :--- |
+| **Required Skills** | 40% | Mandatory technical competencies, libraries, and frameworks |
+| **Preferred Skills** | 15% | Bonus qualifications and nice-to-have capabilities |
+| **Experience** | 15% | Cumulative candidate tenure measured against minimum years required |
+| **Education** | 10% | Degree level (Bachelor's, Master's) and relevance of field of study |
+| **Resume Structure** | 10% | Section completeness (Skills, Experience, Education, Projects) |
+| **Keyword Coverage** | 10% | Density of domain-specific terminology throughout resume text |
+
+*All dimension weights can be tuned in `src/config.py`.*
+
+---
+
+## 🛡️ Resilience & Engineering Highlights
+
+- **Model Fallbacks**: Handles Google Gemini high-demand spikes (503 / 429) automatically by cascading across candidate models (`gemini-3.5-flash` → `gemini-3.5-flash-lite` → `gemini-3.6-flash`).
+- **Compound Skill Matching**: Understands alternative requirements (e.g. *"PostgreSQL or MySQL"*, *"FastAPI / Flask"*) without falsely marking them missing.
+- **Word-Boundary Regex**: Prevents substring false positives for short programming languages like `C`, `R`, and `Go`.
+- **Safe Session Management**: Uses native Telegram bot session states (`context.user_data`) with automatic temporary file cleanup.
+- **Message Chunking**: Automatically partitions long reports into clean, multi-message deliveries to adhere to Telegram's 4,096-character limit.
+
+---
+
 ## 📄 License
-This project is open source and available under the [MIT License](LICENSE).
+
+Distributed under the MIT License. See `LICENSE` for more information.
