@@ -1,0 +1,9 @@
+services:
+  resume-ats-bot:
+    build: .
+    container_name: resume_ats_bot
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data

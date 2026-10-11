@@ -18,12 +18,13 @@ class Config:
     TELEGRAM_BOT_TOKEN: str = os.getenv("TELEGRAM_BOT_TOKEN", "")
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
 
-    # Gemini AI Models
-    PRIMARY_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-3.5-flash")
+    # Gemini AI Models (Prioritize models with fresh quotas)
+    PRIMARY_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")
     FALLBACK_MODELS: list = [
-        "gemini-3.5-flash",
         "gemini-3.5-flash-lite",
+        "gemini-3.1-flash-lite",
         "gemini-3.6-flash",
+        "gemini-3.5-flash",
         "gemini-3.8-flash",
     ]
 

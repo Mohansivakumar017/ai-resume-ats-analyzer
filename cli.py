@@ -3,6 +3,7 @@
 CLI Evaluation tool for AI Resume ATS Analyzer.
 Usage:
     python cli.py --resume samples/sample_resume.pdf --jd samples/sample_jd.txt
+    python cli.py --export report.md
 """
 import argparse
 import sys
@@ -19,10 +20,11 @@ from src.services import (
     evaluate_ats_fit,
     generate_resume_improvements,
     recommend_learning_paths,
+    generate_markdown_report,
 )
 
 
-def run_cli(resume_path: Path, jd_path: Path):
+def run_cli(resume_path: Path, jd_path: Path, export_path: Path = None):
     if not resume_path.is_file():
         print(f"Error: Resume file '{resume_path}' does not exist.")
         sys.exit(1)
@@ -101,6 +103,19 @@ def run_cli(resume_path: Path, jd_path: Path):
             link = f" -> {c['url']}" if c.get("url") else ""
             print(f"• {c.get('course')} ({c.get('skill', '').title()}) [{c.get('platform')}]{link}")
 
+    # Export to markdown if requested
+    if export_path:
+        md_content = generate_markdown_report(
+            resume_name=resume_path.name,
+            jd_title=jd_data.get("job_title", "Target Role"),
+            ats_result=ats_result,
+            improvements=improvements,
+            courses=courses,
+        )
+        with open(export_path, "w", encoding="utf-8") as f:
+            f.write(md_content)
+        print(f"\n✅ Full ATS Report successfully exported to: {export_path}")
+
     print("\n" + "=" * 60)
 
 
@@ -118,8 +133,14 @@ def main():
         default=config.SAMPLE_JD_PATH,
         help="Path to job description text file (default: samples/sample_jd.txt)"
     )
+    parser.add_argument(
+        "--export",
+        type=Path,
+        default=None,
+        help="Optional path to export full Markdown report (e.g., --export report.md)"
+    )
     args = parser.parse_args()
-    run_cli(args.resume, args.jd)
+    run_cli(args.resume, args.jd, args.export)
 
 
 if __name__ == "__main__":

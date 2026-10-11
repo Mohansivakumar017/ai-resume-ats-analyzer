@@ -298,8 +298,31 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     f"  Skill: <i>{c.get('skill', '').title()}</i> | Platform: {c.get('platform')}{url_part}\n"
                 )
 
-        # Send formatted report
+        # Send formatted chat summary report
         await send_smart_chunks(update, report)
+
+        # Generate and deliver downloadable full Markdown report file
+        try:
+            from src.services.report_generator import generate_markdown_report
+            import io
+            md_report = generate_markdown_report(
+                resume_name=context.user_data.get("resume_name", "Resume.pdf"),
+                jd_title=jd_data.get("job_title", "Target Role"),
+                ats_result=ats_result,
+                improvements=improvements,
+                courses=courses,
+            )
+            report_bytes = io.BytesIO(md_report.encode("utf-8"))
+            report_bytes.name = "ATS_Compatibility_Report.md"
+
+            await update.message.reply_document(
+                document=report_bytes,
+                filename="ATS_Compatibility_Report.md",
+                caption="📥 <b>Download your full ATS Compatibility Report (.md)</b>",
+                parse_mode=constants.ParseMode.HTML
+            )
+        except Exception as doc_exc:
+            logger.warning("Could not send report document: %s", doc_exc)
 
     except Exception as exc:
         logger.error("Analysis pipeline failed: %s", exc, exc_info=True)

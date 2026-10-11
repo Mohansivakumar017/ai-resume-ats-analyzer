@@ -91,7 +91,8 @@ resume-ats-bot/
 │       ├── jd_parser.py          # Job description analyzer
 │       ├── ats_scorer.py         # Dynamic 6-dimensional ATS scoring engine
 │       ├── improvement_generator.py # Actionable AI resume coach (Before vs. After)
-│       └── course_recommender.py # Hybrid course recommender (curated + AI roadmaps)
+│       ├── course_recommender.py # Hybrid course recommender (curated + AI roadmaps)
+│       └── report_generator.py   # Full Markdown ATS report generator
 ├── data/
 │   └── curated_courses.json      # Structured database of verified courses & tutorials
 ├── samples/
@@ -99,6 +100,9 @@ resume-ats-bot/
 │   └── sample_jd.txt             # Sample job description
 ├── tests/
 │   └── test_ats_pipeline.py      # Standard unittest end-to-end integration suite
+├── .github/workflows/ci.yml      # Automated GitHub Actions CI workflow
+├── Dockerfile                    # Containerization for 24/7 deployment
+├── docker-compose.yml            # Docker Compose specification
 ├── bot.py                        # Telegram bot runner entrypoint
 ├── cli.py                        # CLI evaluation runner
 ├── requirements.txt              # Production dependencies
@@ -150,10 +154,14 @@ GEMINI_MODEL="gemini-3.5-flash"
 
 ### Option A: Run via CLI
 
-You can evaluate any resume and job description right in your terminal:
+You can evaluate any resume and job description right in your terminal, and optionally export a full Markdown report:
 
 ```bash
+# Terminal evaluation
 python cli.py --resume samples/sample_resume.pdf --jd samples/sample_jd.txt
+
+# Evaluate and export formatted report file
+python cli.py --resume samples/sample_resume.pdf --jd samples/sample_jd.txt --export ATS_Report.md
 ```
 
 ### Option B: Run the Telegram Bot
@@ -168,9 +176,17 @@ Then in Telegram:
 1. Start the bot with `/start`.
 2. Upload your resume as a **PDF document**.
 3. Send the **Job Description** as a text message.
-4. Receive your detailed report, match scores, improvement tips, and learning links!
+4. Receive your detailed report, match scores, improvement tips, and a **downloadable `.md` report document** directly in the chat!
 
-### Option C: Run Integration Tests
+### Option C: Run with Docker (Optional 24/7 Hosting)
+
+Deploy the bot as a background container:
+
+```bash
+docker compose up -d
+```
+
+### Option D: Run Integration Tests
 
 Run the complete pipeline test suite:
 

@@ -1,11 +1,14 @@
 import json
 import logging
+import warnings
 from typing import Any, Dict, List, Optional
 from google import genai
 from google.genai import types
 
 from src.config import config
 
+# Suppress AFC deprecation warning from google-genai
+warnings.filterwarnings("ignore", message=".*automatic function calling.*")
 logger = logging.getLogger(__name__)
 
 
