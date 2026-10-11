@@ -124,8 +124,8 @@ resume-ats-bot/
 
 ```bash
 # Clone the repository
-git clone https://github.com/<your-username>/resume-ats-bot.git
-cd resume-ats-bot
+git clone https://github.com/Mohansivakumar017/ai-resume-ats-analyzer.git
+cd ai-resume-ats-analyzer
 
 # Create and activate virtual environment
 python3 -m venv .venv

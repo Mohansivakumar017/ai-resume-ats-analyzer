@@ -92,6 +92,12 @@ Extract structured information from the following resume text.
 
 Return ONLY a valid JSON object matching this schema:
 {{
+    "candidate_name": "string (Full name of candidate found in header/contact)",
+    "contact": {{
+        "email": "string",
+        "phone": "string",
+        "location": "string"
+    }},
     "skills": ["string"],
     "experience": [
         {{

@@ -18,6 +18,8 @@ def generate_markdown_report(
     ats_result: Dict[str, Any],
     improvements: Dict[str, Any],
     courses: List[Dict[str, Any]],
+    candidate_name: str = "",
+    contact: Dict[str, Any] = None,
 ) -> str:
     """
     Builds a beautifully structured Markdown document summarizing
@@ -26,6 +28,7 @@ def generate_markdown_report(
     score = ats_result["overall_score"]
     bd = ats_result["breakdown"]
     now_str = datetime.now().strftime("%Y-%m-%d %H:%M")
+    contact = contact or {}
 
     # Score grade
     if score >= 85:
@@ -38,12 +41,27 @@ def generate_markdown_report(
         grade = "Low Match (Needs Significant Tailoring)"
         badge = "🔴"
 
-    md = f"""# 📊 AI Resume ATS Compatibility Report
+    title_suffix = f": {candidate_name}" if candidate_name else ""
+    contact_parts = []
+    if contact.get("email"):
+        contact_parts.append(f"📧 {contact['email']}")
+    if contact.get("phone"):
+        contact_parts.append(f"📱 {contact['phone']}")
+    if contact.get("location"):
+        contact_parts.append(f"📍 {contact['location']}")
+    contact_line = " | ".join(contact_parts) if contact_parts else "N/A"
 
-- **Target Role:** {jd_title}
-- **Resume File:** {resume_name}
+    cand_display = candidate_name if candidate_name else "Candidate"
+
+    md = f"""# 📊 AI Resume ATS Compatibility Report{title_suffix}
+
+- **Candidate Name:** **{cand_display}**
+- **Original Document:** `{resume_name}`
+- **Target Opening:** **{jd_title}**
+- **Contact Details:** {contact_line}
 - **Evaluation Date:** {now_str}
 - **Overall Match Rating:** **{score}/100** ({grade}) {badge}
+- **ATS Gauge:** `{format_progress_bar(score, 100, 20)}`
 
 ---
 

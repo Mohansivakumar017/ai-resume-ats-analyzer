@@ -23,7 +23,9 @@ from src.services import (
     generate_resume_improvements,
     recommend_learning_paths,
     generate_markdown_report,
+    format_progress_bar,
     rank_resumes,
+    extract_candidate_name,
 )
 
 
@@ -47,6 +49,8 @@ def run_single_cli(resume_path: Path, jd_path: Path, export_path: Path = None):
 
     # 1. Parse Resume
     resume_text, resume_data = parse_resume(str(resume_path))
+    cand_name = extract_candidate_name(resume_data, resume_text, resume_path.name)
+    contact = resume_data.get("contact", {}) or {}
 
     # 2. Parse JD
     jd_data = parse_job_description(jd_text)
@@ -68,17 +72,27 @@ def run_single_cli(resume_path: Path, jd_path: Path, export_path: Path = None):
     bd = ats_result["breakdown"]
 
     print("\n" + "=" * 60)
-    print(f"🎯 OVERALL MATCH SCORE: {score}/100")
-    print(f"Target Role: {jd_data.get('job_title', 'Target Role')}")
+    print(f"🎯 OVERALL MATCH SCORE: {score}/100 [{format_progress_bar(score, 100, 15)}]")
+    print(f"👤 Candidate: {cand_name}")
+    print(f"📄 File: {resume_path.name}")
+    print(f"💼 Target Role: {jd_data.get('job_title', 'Target Role')}")
+    if contact.get("email"):
+        print(f"📧 Contact: {contact.get('email')} {contact.get('phone', '')}")
     print("=" * 60)
 
-    print("\n📋 SCORE BREAKDOWN:")
-    print(f"• Required Skills: {bd['required_skills']['score']}/{bd['required_skills']['max']}")
-    print(f"• Preferred Skills: {bd['preferred_skills']['score']}/{bd['preferred_skills']['max']}")
+    print("\n📋 6-DIMENSIONAL SCORE BREAKDOWN:")
+    print(f"• Required Skills: {bd['required_skills']['score']}/{bd['required_skills']['max']} [{format_progress_bar(bd['required_skills']['score'], bd['required_skills']['max'], 8)}]")
+    print(f"• Preferred Skills: {bd['preferred_skills']['score']}/{bd['preferred_skills']['max']} [{format_progress_bar(bd['preferred_skills']['score'], bd['preferred_skills']['max'], 8)}]")
     print(f"• Experience: {bd['experience']['score']}/{bd['experience']['max']} (~{bd['experience']['detected_years']} years detected)")
     print(f"• Education: {bd['education']['score']}/{bd['education']['max']}")
     print(f"• Structure: {bd['structure']['score']}/{bd['structure']['max']}")
     print(f"• Keywords: {bd['keywords']['score']}/{bd['keywords']['max']}")
+
+    # Matched competencies
+    matched_all = ats_result.get("matched_required", []) + ats_result.get("matched_preferred", [])
+    if matched_all:
+        print(f"\n✅ Matched Core Skills ({len(matched_all)}):")
+        print("  " + ", ".join([s.title() for s in matched_all[:10]]))
 
     print("\n🔍 SKILL GAP ANALYSIS:")
     if ats_result["missing_required"]:
@@ -114,6 +128,8 @@ def run_single_cli(resume_path: Path, jd_path: Path, export_path: Path = None):
             ats_result=ats_result,
             improvements=improvements,
             courses=courses,
+            candidate_name=cand_name,
+            contact=contact,
         )
         with open(export_path, "w", encoding="utf-8") as f:
             f.write(md_content)
