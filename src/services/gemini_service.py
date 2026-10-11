@@ -16,12 +16,20 @@ class GeminiService:
     """Wrapper for Google Gemini API with fallback handling and JSON enforcement."""
 
     def __init__(self, api_key: Optional[str] = None):
-        self.api_key = api_key or config.GEMINI_API_KEY
-        if not self.api_key:
-            raise ValueError(
-                "GEMINI_API_KEY is not set. Please add it to your .env file."
-            )
-        self.client = genai.Client(api_key=self.api_key)
+        self._api_key = api_key
+        self._client = None
+
+    @property
+    def client(self) -> genai.Client:
+        """Lazily initialize genai.Client when first needed."""
+        if self._client is None:
+            key = self._api_key or config.GEMINI_API_KEY
+            if not key:
+                raise ValueError(
+                    "GEMINI_API_KEY is not set. Please add it to your .env file."
+                )
+            self._client = genai.Client(api_key=key)
+        return self._client
 
     def generate_json(
         self,
