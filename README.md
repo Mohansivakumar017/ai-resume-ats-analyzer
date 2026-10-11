@@ -28,6 +28,7 @@ Built with **Python**, **Google Gemini**, and the **Telegram Bot API**, the syst
 
 ## 🚀 Key Features
 
+- 🏆 **Multi-Resume Candidate Ranking & Best Pick**: Upload and compare multiple resumes against a single job opening to generate an objective **Leaderboard** and automatically pick the **#1 Best Match** with strengths and comparative trade-offs.
 - 📑 **Robust PDF Parsing**: Extracts text cleanly from PDF resumes without data corruption using `pypdf`.
 - 🧠 **Structured Entity Extraction**: Uses Google Gemini to reliably extract structured entities (Skills, Work History, Education, Projects, and Certifications).
 - ⚖️ **Dynamic 6-Dimensional Scoring (100 Pts)**:
@@ -39,8 +40,8 @@ Built with **Python**, **Google Gemini**, and the **Telegram Bot API**, the syst
   - **Keyword Coverage (10 pts)**: Density and distribution of key domain vocabulary.
 - 💡 **AI Resume Coach ("Before & After")**: Rephrases passive bullet points into impactful achievements with metrics and industry-proven action verbs.
 - 📚 **Intelligent Learning Paths**: Combines a curated catalog of industry courses (Coursera, edX, Docker, AWS, Confluent) with dynamically generated learning links for novel skills.
-- 🤖 **Interactive Telegram Bot**: Fast, asynchronous chat interface with inline buttons, message splitting for long reports, and typing indicators.
-- 💻 **Standalone CLI Mode**: Evaluate any resume and job description directly from the command line for fast scripting and CI validation.
+- 🤖 **Interactive Telegram Bot**: Single evaluation + batch ranking (`/rank`), inline buttons, typing indicators, and downloadable reports.
+- 💻 **Standalone CLI Mode**: Evaluate single resumes or batch-rank dozens of candidates directly from the command line.
 
 ---
 
@@ -154,14 +155,22 @@ GEMINI_MODEL="gemini-3.5-flash"
 
 ### Option A: Run via CLI
 
-You can evaluate any resume and job description right in your terminal, and optionally export a full Markdown report:
-
+**1. Single Resume Evaluation & Report:**
 ```bash
 # Terminal evaluation
 python cli.py --resume samples/sample_resume.pdf --jd samples/sample_jd.txt
 
-# Evaluate and export formatted report file
+# Evaluate and export formatted markdown report
 python cli.py --resume samples/sample_resume.pdf --jd samples/sample_jd.txt --export ATS_Report.md
+```
+
+**2. Multi-Resume Candidate Ranking & Best Match Picker:**
+```bash
+# Rank specific candidate resumes against a job description
+python cli.py --rank --resumes samples/sample_candidate_alex.pdf samples/sample_resume.pdf samples/sample_candidate_jordan.pdf --jd samples/sample_jd.txt
+
+# Rank all resumes in a directory and export leaderboard report
+python cli.py --rank --resume-dir samples/ --jd samples/sample_jd.txt --export Candidate_Leaderboard.md
 ```
 
 ### Option B: Run the Telegram Bot
@@ -173,10 +182,9 @@ python bot.py
 ```
 
 Then in Telegram:
-1. Start the bot with `/start`.
-2. Upload your resume as a **PDF document**.
-3. Send the **Job Description** as a text message.
-4. Receive your detailed report, match scores, improvement tips, and a **downloadable `.md` report document** directly in the chat!
+- **Single Mode**: Send `/start` → upload a resume PDF → paste the Job Description.
+- **Batch Ranking Mode**: Send `/rank` → upload 2+ candidate resume PDFs → paste the Job Description to receive a **Candidate Leaderboard** and the **#1 Best Pick**!
+- Receive real-time chat reports and a **downloadable `.md` report document** directly in the chat!
 
 ### Option C: Run with Docker (Optional 24/7 Hosting)
 
@@ -186,12 +194,12 @@ Deploy the bot as a background container:
 docker compose up -d
 ```
 
-### Option D: Run Integration Tests
+### Option D: Run Test Suites
 
-Run the complete pipeline test suite:
+Run the complete single and multi-resume test suite:
 
 ```bash
-python -m unittest tests/test_ats_pipeline.py
+python -m unittest discover tests
 ```
 
 ---
@@ -223,4 +231,4 @@ python -m unittest tests/test_ats_pipeline.py
 
 ## 📄 License
 
-Distributed under the MIT License. See `LICENSE` for more information.
+Distributed under the MIT License. See [LICENSE](LICENSE) for more information.

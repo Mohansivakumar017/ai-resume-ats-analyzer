@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """
 CLI Evaluation tool for AI Resume ATS Analyzer.
-Usage:
-    python cli.py --resume samples/sample_resume.pdf --jd samples/sample_jd.txt
-    python cli.py --export report.md
+Supports:
+  1. Single Resume Evaluation & Improvement Report
+     python cli.py --resume samples/sample_resume.pdf --jd samples/sample_jd.txt
+  2. Multi-Resume Ranking & Best Candidate Picker
+     python cli.py --rank --resumes samples/*.pdf --jd samples/sample_jd.txt
 """
 import argparse
 import sys
@@ -21,10 +23,11 @@ from src.services import (
     generate_resume_improvements,
     recommend_learning_paths,
     generate_markdown_report,
+    rank_resumes,
 )
 
 
-def run_cli(resume_path: Path, jd_path: Path, export_path: Path = None):
+def run_single_cli(resume_path: Path, jd_path: Path, export_path: Path = None):
     if not resume_path.is_file():
         print(f"Error: Resume file '{resume_path}' does not exist.")
         sys.exit(1)
@@ -119,13 +122,75 @@ def run_cli(resume_path: Path, jd_path: Path, export_path: Path = None):
     print("\n" + "=" * 60)
 
 
+def run_ranking_cli(resume_paths: list, jd_path: Path, export_path: Path = None):
+    if not jd_path.is_file():
+        print(f"Error: Job description file '{jd_path}' does not exist.")
+        sys.exit(1)
+
+    valid_paths = [str(p) for p in resume_paths if Path(p).is_file() and str(p).lower().endswith(".pdf")]
+    if len(valid_paths) < 1:
+        print("Error: No valid PDF resumes provided for ranking.")
+        sys.exit(1)
+
+    with open(jd_path, "r", encoding="utf-8") as f:
+        jd_text = f.read()
+
+    print("=" * 60)
+    print("🏆 BATCH RESUME RANKING & BEST CANDIDATE EVALUATION")
+    print("=" * 60)
+    print(f"Evaluating {len(valid_paths)} resumes against: {jd_path.name}")
+    print("\n⏳ Processing candidates with Gemini AI...")
+
+    ranking_result = rank_resumes(valid_paths, jd_text)
+    leaderboard = ranking_result["leaderboard"]
+    top_pick = ranking_result["top_pick"]
+    role = ranking_result["target_role"]
+
+    print("\n" + "=" * 60)
+    print(f"🥇 BEST RESUME MATCH: {top_pick['candidate_name'].upper()} ({top_pick['score']}/100)")
+    print(f"Target Role: {role}")
+    print(f"File: {top_pick['filename']}")
+    print(f"Status: {top_pick['status']}")
+    print("=" * 60)
+
+    print("\n📊 CANDIDATE LEADERBOARD:")
+    print(f"{'Rank':<6} | {'Score':<6} | {'Candidate Name':<25} | {'Filename':<30} | {'Status'}")
+    print("-" * 85)
+    for c in leaderboard:
+        rank_str = f"#{c['rank']}"
+        score_str = f"{c['score']}/100"
+        print(f"{rank_str:<6} | {score_str:<6} | {c['candidate_name'][:25]:<25} | {c['filename'][:30]:<30} | {c['status']}")
+
+    if export_path:
+        with open(export_path, "w", encoding="utf-8") as f:
+            f.write(ranking_result["report_markdown"])
+        print(f"\n✅ Candidate Ranking Report exported to: {export_path}")
+
+    print("\n" + "=" * 60)
+
+
 def main():
-    parser = argparse.ArgumentParser(description="Evaluate resume against job description using AI ATS engine.")
+    parser = argparse.ArgumentParser(description="AI Resume ATS Analyzer & Batch Candidate Ranker.")
     parser.add_argument(
         "--resume",
         type=Path,
         default=config.SAMPLE_RESUME_PATH,
-        help="Path to resume PDF file (default: samples/sample_resume.pdf)"
+        help="Path to single resume PDF file (default: samples/sample_resume.pdf)"
+    )
+    parser.add_argument(
+        "--resumes",
+        nargs="+",
+        help="List of multiple resume PDF files to rank"
+    )
+    parser.add_argument(
+        "--resume-dir",
+        type=Path,
+        help="Directory containing multiple resume PDFs to rank"
+    )
+    parser.add_argument(
+        "--rank",
+        action="store_true",
+        help="Enable batch candidate ranking mode"
     )
     parser.add_argument(
         "--jd",
@@ -137,10 +202,23 @@ def main():
         "--export",
         type=Path,
         default=None,
-        help="Optional path to export full Markdown report (e.g., --export report.md)"
+        help="Path to export Markdown report (e.g., --export report.md)"
     )
     args = parser.parse_args()
-    run_cli(args.resume, args.jd, args.export)
+
+    # Determine mode
+    if args.rank or args.resumes or args.resume_dir:
+        paths = []
+        if args.resumes:
+            paths.extend(args.resumes)
+        if args.resume_dir and args.resume_dir.is_dir():
+            paths.extend(list(args.resume_dir.glob("*.pdf")))
+        if not paths:
+            # Fallback to all samples
+            paths = list(config.SAMPLES_DIR.glob("*.pdf"))
+        run_ranking_cli(paths, args.jd, args.export)
+    else:
+        run_single_cli(args.resume, args.jd, args.export)
 
 
 if __name__ == "__main__":

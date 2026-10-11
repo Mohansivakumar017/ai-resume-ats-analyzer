@@ -37,6 +37,8 @@ class Config:
     WEIGHT_KEYWORDS: float = 10.0
 
     # Paths
+    DATA_DIR: Path = DATA_DIR
+    SAMPLES_DIR: Path = SAMPLES_DIR
     CURATED_COURSES_PATH: Path = DATA_DIR / "curated_courses.json"
     SAMPLE_RESUME_PATH: Path = SAMPLES_DIR / "sample_resume.pdf"
     SAMPLE_JD_PATH: Path = SAMPLES_DIR / "sample_jd.txt"
