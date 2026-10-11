@@ -182,8 +182,8 @@ python bot.py
 ```
 
 Then in Telegram:
-- **Single Mode**: Send `/start` → upload a resume PDF → paste the Job Description.
-- **Batch Ranking Mode**: Send `/rank` → upload 2+ candidate resume PDFs → paste the Job Description to receive a **Candidate Leaderboard** and the **#1 Best Pick**!
+- **Single Mode**: Send `/single` (or `/start`) → upload 1 resume (PDF or DOCX) → paste the Job Description to receive the complete ATS score, 6-dimension breakdown, skill gaps, Before vs. After rewrites, and course roadmap.
+- **Batch Ranking Mode**: Send `/rank` → upload 2+ candidate resumes → paste the Job Description to receive a **Candidate Leaderboard** and the **#1 Best Pick**!
 - Receive real-time chat reports and a **downloadable `.md` report document** directly in the chat!
 
 ### Option C: Run with Docker (Optional 24/7 Hosting)

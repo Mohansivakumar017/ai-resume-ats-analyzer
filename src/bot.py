@@ -109,16 +109,19 @@ def cleanup_session_resumes(context: ContextTypes.DEFAULT_TYPE):
     context.user_data["resumes"] = []
     context.user_data.pop("resume_path", None)
     context.user_data.pop("resume_name", None)
+    context.user_data.pop("batch_mode", None)
 
 
 async def start_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handles the /start welcome command."""
+    context.user_data.pop("batch_mode", None)
     keyboard = [
         [
-            InlineKeyboardButton("ℹ️ How it works", callback_data="help"),
+            InlineKeyboardButton("📄 Single Evaluation", callback_data="single_mode"),
             InlineKeyboardButton("🏆 Rank Multiple Resumes", callback_data="rank_info"),
         ],
         [
+            InlineKeyboardButton("ℹ️ How it works", callback_data="help"),
             InlineKeyboardButton("🔄 Reset Session", callback_data="reset"),
         ]
     ]
@@ -127,19 +130,45 @@ async def start_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     welcome_message = (
         "🤖 <b>AI Resume ATS Analyzer & Candidate Ranker</b>\n\n"
         "Maximize your job interview chances or pick the best candidate among multiple resumes!\n\n"
-        "<b>Supported Resume Formats:</b> <b>PDF</b> (<code>.pdf</code>), <b>Word</b> (<code>.docx</code>), and <b>Text</b> (<code>.txt</code>).\n\n"
-        "<b>How to use:</b>\n"
-        "1️⃣ <b>Single Resume Evaluation:</b>\n"
-        "   • Send your resume (PDF or DOCX) → paste target Job Description → get ATS Score (0-100), rewrite recommendations, and course roadmap.\n\n"
+        "<b>Supported Formats:</b> <b>PDF</b> (<code>.pdf</code>), <b>Word</b> (<code>.docx</code>), and <b>Text</b> (<code>.txt</code>).\n\n"
+        "<b>Available Modes:</b>\n"
+        "1️⃣ <b>Single Resume Evaluation (/single):</b>\n"
+        "   • Send 1 resume → paste Job Description → get ATS Score (0-100), 6-dimension breakdown, Before vs. After rewrites, and learning roadmap.\n\n"
         "2️⃣ <b>Multi-Resume Ranking (/rank):</b>\n"
         "   • Send 2 or more candidate resumes → paste Job Description → get Candidate Leaderboard with #1 Best Pick!\n\n"
-        "<i>Upload your resume now to begin, or type /rank to compare multiple applicants.</i>"
+        "<i>Upload your resume now to begin, or choose an option below.</i>"
     )
     await update.message.reply_text(
         welcome_message,
         reply_markup=reply_markup,
         parse_mode=constants.ParseMode.HTML
     )
+
+
+async def single_command_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Switches session explicitly to single resume evaluation mode."""
+    context.user_data.pop("batch_mode", None)
+    resumes_list = context.user_data.get("resumes", [])
+    count = len(resumes_list)
+    msg = (
+        "📄 <b>Single Resume Evaluation Mode Active</b>\n\n"
+        "<b>How it works:</b>\n"
+        "1. Send your resume (<b>PDF</b> or <b>DOCX</b>).\n"
+        "2. Paste the target Job Description text.\n"
+        "3. Receive ATS score (0-100), 6-dimension breakdown, skill gaps, Before vs. After rewrites, and learning courses!\n\n"
+    )
+    if count == 1:
+        msg += f"<i>Current resume in queue:</i> <code>{html.escape(resumes_list[0]['name'])}</code>\nPaste your Job Description now to evaluate!"
+    elif count > 1:
+        msg += f"<i>Note: You have {count} resumes queued. Type /reset to start fresh or paste Job Description to evaluate.</i>"
+    else:
+        msg += "<i>Send your PDF or DOCX resume now to begin...</i>"
+
+    if update.callback_query:
+        await update.callback_query.answer()
+        await update.callback_query.message.reply_text(msg, parse_mode=constants.ParseMode.HTML)
+    else:
+        await update.message.reply_text(msg, parse_mode=constants.ParseMode.HTML)
 
 
 async def rank_command_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -149,12 +178,12 @@ async def rank_command_handler(update: Update, context: ContextTypes.DEFAULT_TYP
 
     count = len(resumes_list)
     msg = (
-        "🏆 <b>Batch Candidate Ranking Mode</b>\n\n"
+        "🏆 <b>Batch Candidate Ranking Mode Active</b>\n\n"
         f"<b>Resumes currently in queue:</b> {count}\n\n"
         "<b>Instructions:</b>\n"
         "1. Send candidate resumes (<b>PDF</b> or <b>DOCX</b>) one after another.\n"
-        "2. When all resumes are uploaded, <b>paste the Job Description text</b> to evaluate the candidates and pick the #1 match!\n\n"
-        "<i>Send candidate resumes now...</i>"
+        "2. When all resumes are uploaded, <b>paste the Job Description text</b> to rank all candidates and pick the #1 match!\n\n"
+        "<i>Send candidate resumes now (or type /single to switch to single evaluation)...</i>"
     )
     if update.callback_query:
         await update.callback_query.answer()
@@ -167,20 +196,21 @@ async def help_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Provides troubleshooting guidance and instructions."""
     help_message = (
         "📖 <b>ATS Optimization & Ranking Guide</b>\n\n"
-        "<b>Single Resume Mode:</b>\n"
-        "1. Send 1 resume (<b>PDF</b> or <b>DOCX</b>).\n"
-        "2. Paste target Job Description text.\n"
-        "3. Receive ATS score (0-100), 6-dimension breakdown, skill gaps, Before vs. After rewrites, and downloadable <code>.md</code> report.\n\n"
-        "<b>Multi-Resume Ranking Mode:</b>\n"
-        "1. Type /rank.\n"
-        "2. Send 2 or more candidate resumes.\n"
-        "3. Paste target Job Description text.\n"
-        "4. Receive Candidate Leaderboard with #1 Best Pick, comparative analysis, and recruiter interview tips!\n\n"
+        "<b>1. Single Resume Mode (/single):</b>\n"
+        "• Send 1 resume (<b>PDF</b> or <b>DOCX</b>).\n"
+        "• Paste target Job Description text.\n"
+        "• Receive ATS score (0-100), 6-dimension breakdown, skill gaps, Before vs. After rewrites, and downloadable <code>.md</code> report.\n\n"
+        "<b>2. Multi-Resume Ranking Mode (/rank):</b>\n"
+        "• Type /rank.\n"
+        "• Send 2 or more candidate resumes.\n"
+        "• Paste target Job Description text.\n"
+        "• Receive Candidate Leaderboard with #1 Best Pick, comparative analysis, and recruiter interview tips!\n\n"
         "<b>Commands:</b>\n"
-        "/start - Welcome screen\n"
-        "/rank  - Start batch candidate ranking\n"
-        "/help  - Display this guide\n"
-        "/reset - Clear active session"
+        "/single - Single resume evaluation mode\n"
+        "/rank   - Multi-resume candidate ranking mode\n"
+        "/start  - Welcome screen\n"
+        "/help   - Display this guide\n"
+        "/reset  - Clear active session"
     )
     if update.callback_query:
         await update.callback_query.answer()
@@ -266,7 +296,7 @@ async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 f"📄 <b>Resume received:</b> <code>{html.escape(file_name)}</code>\nAnalyzing against Job Description in caption...",
                 parse_mode=constants.ParseMode.HTML
             )
-            if count > 1 or context.user_data.get("batch_mode"):
+            if count > 1:
                 await process_batch_ranking(update, context, resumes_list, caption)
             else:
                 await process_single_evaluation(update, context, resume_item, caption)
@@ -279,6 +309,14 @@ async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 "<b>Next step:</b>\n"
                 "• <b>To analyze this resume:</b> Paste the target Job Description now.\n"
                 "• <b>To compare multiple candidates:</b> Send more resumes now (or type /rank)!",
+                parse_mode=constants.ParseMode.HTML
+            )
+        elif count == 1 and context.user_data.get("batch_mode"):
+            await update.message.reply_text(
+                f"📄 <b>Resume #1 added:</b> <code>{html.escape(file_name)}</code>\n\n"
+                "<b>Next step:</b>\n"
+                "• <b>To rank multiple candidates:</b> Send resume #2 now.\n"
+                "• <b>To evaluate just this resume:</b> Paste the target Job Description now!",
                 parse_mode=constants.ParseMode.HTML
             )
         else:
@@ -324,8 +362,9 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
 
-    # Decide whether Single Evaluation or Batch Ranking
-    if len(resumes_list) > 1 or context.user_data.get("batch_mode"):
+    # If 2 or more resumes in queue -> Batch Ranking Leaderboard
+    # If 1 resume in queue -> Single Resume ATS Evaluation
+    if len(resumes_list) > 1:
         await process_batch_ranking(update, context, resumes_list, jd_text)
     else:
         resume_item = resumes_list[0]
@@ -738,10 +777,12 @@ def create_bot_app() -> Application:
     app.add_handler(CommandHandler("start", start_handler))
     app.add_handler(CommandHandler("help", help_handler))
     app.add_handler(CommandHandler("reset", reset_handler))
+    app.add_handler(CommandHandler("single", single_command_handler))
     app.add_handler(CommandHandler("rank", rank_command_handler))
 
     app.add_handler(CallbackQueryHandler(help_handler, pattern="^help$"))
     app.add_handler(CallbackQueryHandler(reset_handler, pattern="^reset$"))
+    app.add_handler(CallbackQueryHandler(single_command_handler, pattern="^single_mode$"))
     app.add_handler(CallbackQueryHandler(rank_command_handler, pattern="^rank_info$"))
     app.add_handler(CallbackQueryHandler(candidate_detail_callback, pattern="^cand_\\d+$"))
 
