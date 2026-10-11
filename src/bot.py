@@ -1,5 +1,6 @@
 import os
 import io
+import html
 import logging
 import tempfile
 from typing import List
@@ -85,12 +86,12 @@ async def start_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     welcome_message = (
         "🤖 <b>AI Resume ATS Analyzer & Candidate Ranker</b>\n\n"
         "Maximize your job interview chances or pick the best candidate among multiple resumes!\n\n"
-        "<b>Modes Available:</b>\n"
-        "1️⃣ <b>Single Resume Evaluation:</b>\n"
-        "   • Send 1 PDF resume → send Job Description → get ATS score, feedback, & course roadmap.\n\n"
+        "<b>How to use:</b>\n"
+        "1️⃣ <b>Single Resume:</b>\n"
+        "   • Send 1 PDF resume → paste Job Description → get ATS score (0-100), rewrite suggestions, & course roadmap.\n\n"
         "2️⃣ <b>Multi-Resume Ranking (/rank):</b>\n"
-        "   • Send multiple PDF resumes → send Job Description → get Candidate Leaderboard & Best Pick!\n\n"
-        "<i>Upload a PDF resume to begin, or type /rank for batch ranking.</i>"
+        "   • Send 2 or more PDF resumes → paste Job Description → get Candidate Leaderboard & Best Pick!\n\n"
+        "<i>Upload your resume PDF to begin, or type /rank to compare multiple candidates.</i>"
     )
     await update.message.reply_text(
         welcome_message,
@@ -102,16 +103,16 @@ async def start_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def rank_command_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Enables multi-resume batch ranking mode."""
     context.user_data["batch_mode"] = True
-    context.user_data.setdefault("resumes", [])
+    resumes_list = context.user_data.setdefault("resumes", [])
 
-    count = len(context.user_data["resumes"])
+    count = len(resumes_list)
     msg = (
-        "🏆 <b>Batch Candidate Ranking Mode Activated!</b>\n\n"
-        f"<b>Resumes currently uploaded:</b> {count}\n\n"
+        "🏆 <b>Batch Candidate Ranking Mode</b>\n\n"
+        f"<b>Resumes currently in queue:</b> {count}\n\n"
         "<b>Instructions:</b>\n"
-        "1. Send your candidate PDF resumes one by one.\n"
-        "2. When all resumes are uploaded, <b>paste the Job Description text</b> to evaluate and pick the best match!\n\n"
-        "<i>Send your first PDF resume now...</i>"
+        "1. Send your candidate PDF resumes one after another.\n"
+        "2. When all resumes are uploaded, <b>paste the Job Description text</b> to rank all candidates and pick the #1 match!\n\n"
+        "<i>Send your PDF resumes now...</i>"
     )
     if update.callback_query:
         await update.callback_query.answer()
@@ -127,7 +128,7 @@ async def help_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "<b>Single Mode:</b>\n"
         "1. Send a single PDF resume.\n"
         "2. Send target Job Description text.\n"
-        "3. Receive ATS score (0-100), missing skills, rewrite suggestions, and downloadable `.md` report.\n\n"
+        "3. Receive ATS score (0-100), missing skills, rewrite suggestions, and downloadable <code>.md</code> report.\n\n"
         "<b>Multi-Resume Ranking Mode:</b>\n"
         "1. Type /rank.\n"
         "2. Send 2 or more PDF resumes.\n"
@@ -148,15 +149,6 @@ async def help_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def reset_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Clears the active user session and removes temporary files."""
-    # Clean single resume
-    single = context.user_data.get("resume_path")
-    if single and os.path.exists(single):
-        try:
-            os.remove(single)
-        except Exception:
-            pass
-
-    # Clean batch resumes
     for item in context.user_data.get("resumes", []):
         p = item.get("path")
         if p and os.path.exists(p):
@@ -174,22 +166,40 @@ async def reset_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(msg, parse_mode=constants.ParseMode.HTML)
 
 
+async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Catches photo uploads and instructs user to upload as PDF document."""
+    await update.message.reply_text(
+        "📷 <b>Photo received:</b> The ATS analyzer requires text-selectable documents.\n\n"
+        "Please send your resume as a <b>PDF file</b> (choose <i>'Send as File / Document'</i> instead of photo).",
+        parse_mode=constants.ParseMode.HTML
+    )
+
+
 async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Receives and stores candidate PDF resumes."""
     doc = update.message.document
+    if not doc:
+        return
 
-    if not doc.file_name or not doc.file_name.lower().endswith(".pdf"):
+    file_name = doc.file_name or "Resume.pdf"
+    mime = (doc.mime_type or "").lower()
+
+    # Validate that it is a PDF file
+    is_pdf = file_name.lower().endswith(".pdf") or "pdf" in mime
+    if not is_pdf:
         await update.message.reply_text(
-            "❌ <b>Unsupported format!</b> Please send your resume as a <b>PDF</b> document.",
+            f"❌ <b>Unsupported format:</b> <code>{html.escape(file_name)}</code>\n\n"
+            "Please upload your resume as a <b>PDF document</b>.",
             parse_mode=constants.ParseMode.HTML
         )
         return
 
-    # Check file size (max 15MB)
-    if doc.file_size and doc.file_size > 15 * 1024 * 1024:
-        await update.message.reply_text("❌ PDF file size exceeds 15MB limit.")
+    # Check file size (max 20MB)
+    if doc.file_size and doc.file_size > 20 * 1024 * 1024:
+        await update.message.reply_text("❌ PDF file size exceeds 20MB limit.")
         return
 
+    # Create secure temporary file
     with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tf:
         temp_path = tf.name
 
@@ -198,25 +208,43 @@ async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE):
         tg_file = await doc.get_file()
         await tg_file.download_to_drive(temp_path)
 
-        # Batch mode or multiple resumes uploaded
+        # Store in user session queue
         resumes_list = context.user_data.setdefault("resumes", [])
-        resumes_list.append({"name": doc.file_name, "path": temp_path})
+        resumes_list.append({"name": file_name, "path": temp_path})
         context.user_data["resume_path"] = temp_path
-        context.user_data["resume_name"] = doc.file_name
+        context.user_data["resume_name"] = file_name
 
         count = len(resumes_list)
+
+        # Check if user passed Job Description in caption
+        caption = (update.message.caption or "").strip()
+        if len(caption) >= 30:
+            await update.message.reply_text(
+                f"📄 <b>Resume received with Job Description in caption!</b>\nAnalyzing now...",
+                parse_mode=constants.ParseMode.HTML
+            )
+            if count > 1 or context.user_data.get("batch_mode"):
+                await process_batch_ranking(update, context, resumes_list, caption)
+            else:
+                await process_single_evaluation(update, context, temp_path, caption)
+            return
+
+        # Regular resume upload response
         if count == 1 and not context.user_data.get("batch_mode"):
             await update.message.reply_text(
-                f"📄 <b>Resume received:</b> <code>{doc.file_name}</code>\n\n"
+                f"📄 <b>Resume received:</b> <code>{html.escape(file_name)}</code>\n\n"
+                "<b>Next step:</b>\n"
                 "• <b>To analyze this resume:</b> Paste the target Job Description now.\n"
-                "• <b>To compare multiple resumes:</b> Send more PDFs or type /rank!",
+                "• <b>To compare multiple resumes:</b> Send more PDF resumes now (or type /rank)!",
                 parse_mode=constants.ParseMode.HTML
             )
         else:
+            queue_str = "\n".join([f"  {idx+1}. <code>{html.escape(r['name'])}</code>" for idx, r in enumerate(resumes_list)])
             await update.message.reply_text(
-                f"✅ <b>Resume #{count} added:</b> <code>{doc.file_name}</code>\n\n"
-                f"Total resumes queued: <b>{count}</b>\n"
-                "• Send another PDF resume, or\n"
+                f"✅ <b>Resume #{count} added:</b> <code>{html.escape(file_name)}</code>\n\n"
+                f"📋 <b>Resumes in queue ({count}):</b>\n{queue_str}\n\n"
+                "<b>Next step:</b>\n"
+                "• Send another PDF resume to add to this batch, or\n"
                 "• <b>Paste the Job Description</b> now to rank all candidates!",
                 parse_mode=constants.ParseMode.HTML
             )
@@ -225,7 +253,7 @@ async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if os.path.exists(temp_path):
             os.remove(temp_path)
         await update.message.reply_text(
-            "❌ <b>Download Error:</b> Could not process your PDF. Please try uploading it again.",
+            f"❌ <b>Download Error:</b> Could not process <code>{html.escape(file_name)}</code>. Please try uploading again.",
             parse_mode=constants.ParseMode.HTML
         )
 
@@ -234,9 +262,10 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Processes job description text and computes ATS scoring or batch ranking."""
     resumes_list = context.user_data.get("resumes", [])
 
-    if not resumes_list and not context.user_data.get("resume_path"):
+    if not resumes_list:
         await update.message.reply_text(
-            "⚠️ <b>Missing Resume!</b> Please send at least one PDF resume before sending the job description.",
+            "⚠️ <b>No resume uploaded!</b>\n\n"
+            "Please send your resume as a <b>PDF file</b> first before pasting the job description.",
             parse_mode=constants.ParseMode.HTML
         )
         return
@@ -244,7 +273,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     jd_text = (update.message.text or "").strip()
     if len(jd_text) < 30:
         await update.message.reply_text(
-            "⚠️ <b>Job description too brief!</b> Please provide the complete job posting.",
+            "⚠️ <b>Job description too brief!</b> Please provide the complete job posting (responsibilities, requirements, qualifications).",
             parse_mode=constants.ParseMode.HTML
         )
         return
@@ -253,7 +282,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if len(resumes_list) > 1 or context.user_data.get("batch_mode"):
         await process_batch_ranking(update, context, resumes_list, jd_text)
     else:
-        resume_path = context.user_data["resume_path"]
+        resume_path = resumes_list[0]["path"]
         await process_single_evaluation(update, context, resume_path, jd_text)
 
 
@@ -266,13 +295,13 @@ async def process_batch_ranking(
     """Evaluates multiple resumes and outputs leaderboard with best pick."""
     paths = [r["path"] for r in resumes_list if os.path.exists(r["path"])]
     if len(paths) == 0:
-        await update.message.reply_text("❌ No valid resume files found. Please re-upload your PDFs.")
+        await update.message.reply_text("❌ No valid resume files found in session. Please re-upload your PDFs.")
         return
 
     progress_msg = await update.message.reply_text(
         f"⏳ <b>Ranking {len(paths)} Candidates with Gemini AI...</b>\n"
-        "• Parsing all candidate entities...\n"
-        "• Benchmarking against job requirements...\n"
+        "• Parsing candidate qualifications...\n"
+        "• Matching against job requirements...\n"
         "• Selecting the #1 Best Match...",
         parse_mode=constants.ParseMode.HTML
     )
@@ -288,24 +317,32 @@ async def process_batch_ranking(
         except Exception:
             pass
 
+        role_escaped = html.escape(str(ranking.get('target_role', 'Target Role')))
+        top_name_escaped = html.escape(str(top['candidate_name']))
+        top_file_escaped = html.escape(str(top['filename']))
+        top_status_escaped = html.escape(str(top['status']))
+
         # Build clean formatted leaderboard
         report = (
             f"🏆 <b>CANDIDATE RANKING LEADERBOARD</b>\n"
-            f"<b>Role:</b> {ranking['target_role']}\n"
+            f"<b>Role:</b> {role_escaped}\n"
             f"<b>Candidates Evaluated:</b> {ranking['total_evaluated']}\n"
             "━━━━━━━━━━━━━━━━━━━━━\n\n"
-            f"🥇 <b>#1 BEST RESUME MATCH:</b> <b>{top['candidate_name'].upper()}</b>\n"
-            f"• <b>Score:</b> <b>{top['score']}/100</b> ({top['status']})\n"
-            f"• <b>File:</b> <code>{top['filename']}</code>\n"
+            f"🥇 <b>#1 BEST RESUME MATCH:</b> <b>{top_name_escaped.upper()}</b>\n"
+            f"• <b>Score:</b> <b>{top['score']}/100</b> ({top_status_escaped})\n"
+            f"• <b>File:</b> <code>{top_file_escaped}</code>\n"
             f"• <b>Mandatory Skills Matched:</b> {len(top['matched_required'])}\n\n"
             "📊 <b>LEADERBOARD:</b>\n"
         )
 
         for c in leaderboard:
             rank_icon = "🥇" if c['rank'] == 1 else ("🥈" if c['rank'] == 2 else ("🥉" if c['rank'] == 3 else f"#{c['rank']}"))
+            c_name = html.escape(str(c['candidate_name']))
+            c_file = html.escape(str(c['filename']))
+            c_status = html.escape(str(c['status']))
             report += (
-                f"{rank_icon} <b>{c['candidate_name']}</b> — <b>{c['score']}/100</b>\n"
-                f"   Doc: <code>{c['filename']}</code> | {c['status']}\n"
+                f"{rank_icon} <b>{c_name}</b> — <b>{c['score']}/100</b>\n"
+                f"   Doc: <code>{c_file}</code> | {c_status}\n"
             )
 
         await send_smart_chunks(update, report)
@@ -320,14 +357,7 @@ async def process_batch_ranking(
             parse_mode=constants.ParseMode.HTML
         )
 
-    except Exception as exc:
-        logger.error("Batch ranking failed: %s", exc, exc_info=True)
-        await update.message.reply_text(
-            f"❌ <b>Ranking Failed:</b> {str(exc)}\nPlease check your inputs and try again.",
-            parse_mode=constants.ParseMode.HTML
-        )
-    finally:
-        # Cleanup
+        # Clean up temporary files on success
         for r in resumes_list:
             if os.path.exists(r.get("path", "")):
                 try:
@@ -335,6 +365,17 @@ async def process_batch_ranking(
                 except Exception:
                     pass
         context.user_data.clear()
+
+    except Exception as exc:
+        logger.error("Batch ranking failed: %s", exc, exc_info=True)
+        try:
+            await progress_msg.delete()
+        except Exception:
+            pass
+        await update.message.reply_text(
+            f"❌ <b>Ranking Failed:</b> {html.escape(str(exc))}\n\nPlease check your inputs and try again.",
+            parse_mode=constants.ParseMode.HTML
+        )
 
 
 async def process_single_evaluation(
@@ -383,9 +424,10 @@ async def process_single_evaluation(
         score_emoji = "🟢" if score >= 80 else ("🟡" if score >= 60 else "🔴")
         bd = ats_result["breakdown"]
 
+        role_name = html.escape(str(jd_data.get('job_title', 'Target Role')))
         report = (
             f"🎯 <b>ATS MATCH REPORT: {score}/100</b> {score_emoji}\n"
-            f"<b>Role:</b> {jd_data.get('job_title', 'Target Role')}\n"
+            f"<b>Role:</b> {role_name}\n"
             "━━━━━━━━━━━━━━━━━━━━━\n\n"
             "📊 <b>SCORE BREAKDOWN:</b>\n"
             f"• Required Skills: <b>{bd['required_skills']['score']}/{bd['required_skills']['max']}</b>\n"
@@ -401,14 +443,14 @@ async def process_single_evaluation(
         if ats_result["missing_required"]:
             report += "🔴 <b>Missing Required Skills:</b>\n"
             for s in ats_result["missing_required"]:
-                report += f"  • {s.title()}\n"
+                report += f"  • {html.escape(s.title())}\n"
         else:
             report += "🔴 <b>Missing Required Skills:</b> None! Perfect match 🎉\n"
 
         if ats_result["missing_preferred"]:
             report += "\n🟡 <b>Missing Preferred Skills:</b>\n"
             for s in ats_result["missing_preferred"]:
-                report += f"  • {s.title()}\n"
+                report += f"  • {html.escape(s.title())}\n"
         else:
             report += "\n🟡 <b>Missing Preferred Skills:</b> None! All covered 🎉\n"
 
@@ -417,27 +459,34 @@ async def process_single_evaluation(
         if crit:
             report += "\n💡 <b>HIGH-IMPACT RESUME ENHANCEMENTS:</b>\n"
             for idx, item in enumerate(crit[:3], 1):
+                sec_escaped = html.escape(str(item.get('section', 'General')))
+                sug_escaped = html.escape(str(item.get('suggestion', '')))
+                ex_escaped = html.escape(str(item.get('example_transformation', '')))
                 report += (
-                    f"<b>{idx}. {item.get('section', 'General')}:</b> {item.get('suggestion')}\n"
-                    f"<i>Example:</i> {item.get('example_transformation')}\n\n"
+                    f"<b>{idx}. {sec_escaped}:</b> {sug_escaped}\n"
+                    f"<i>Example:</i> {ex_escaped}\n\n"
                 )
 
         # Recommended Courses
         if courses:
             report += "📚 <b>RECOMMENDED LEARNING PATHS:</b>\n"
             for c in courses[:4]:
+                c_title = html.escape(str(c.get('course', '')))
+                c_skill = html.escape(str(c.get('skill', '')).title())
+                c_plat = html.escape(str(c.get('platform', '')))
                 url_part = f" (<a href='{c['url']}'>Link</a>)" if c.get("url") else ""
                 report += (
-                    f"• <b>{c.get('course')}</b>\n"
-                    f"  Skill: <i>{c.get('skill', '').title()}</i> | Platform: {c.get('platform')}{url_part}\n"
+                    f"• <b>{c_title}</b>\n"
+                    f"  Skill: <i>{c_skill}</i> | Platform: {c_plat}{url_part}\n"
                 )
 
         await send_smart_chunks(update, report)
 
         # Send downloadable Markdown report
         try:
+            resume_name = context.user_data.get("resume_name", "Resume.pdf")
             md_report = generate_markdown_report(
-                resume_name=context.user_data.get("resume_name", "Resume.pdf"),
+                resume_name=resume_name,
                 jd_title=jd_data.get("job_title", "Target Role"),
                 ats_result=ats_result,
                 improvements=improvements,
@@ -454,19 +503,24 @@ async def process_single_evaluation(
         except Exception as doc_exc:
             logger.warning("Could not send report document: %s", doc_exc)
 
-    except Exception as exc:
-        logger.error("Single evaluation failed: %s", exc, exc_info=True)
-        await update.message.reply_text(
-            f"❌ <b>Analysis Failed:</b> {str(exc)}\nPlease check your inputs and retry.",
-            parse_mode=constants.ParseMode.HTML
-        )
-    finally:
+        # Clean up temporary files on success
         if os.path.exists(resume_path):
             try:
                 os.remove(resume_path)
             except Exception:
                 pass
         context.user_data.clear()
+
+    except Exception as exc:
+        logger.error("Single evaluation failed: %s", exc, exc_info=True)
+        try:
+            await progress_msg.delete()
+        except Exception:
+            pass
+        await update.message.reply_text(
+            f"❌ <b>Analysis Failed:</b> {html.escape(str(exc))}\n\nPlease check your inputs and retry.",
+            parse_mode=constants.ParseMode.HTML
+        )
 
 
 def create_bot_app() -> Application:
@@ -486,7 +540,9 @@ def create_bot_app() -> Application:
     app.add_handler(CallbackQueryHandler(reset_handler, pattern="^reset$"))
     app.add_handler(CallbackQueryHandler(rank_command_handler, pattern="^rank_info$"))
 
-    app.add_handler(MessageHandler(filters.Document.PDF, handle_document))
+    # Accept all documents and validate PDF extension / mime-type safely
+    app.add_handler(MessageHandler(filters.Document.ALL, handle_document))
+    app.add_handler(MessageHandler(filters.PHOTO, handle_photo))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
 
     return app
