@@ -29,7 +29,7 @@ Built with **Python**, **Google Gemini**, and the **Telegram Bot API**, the syst
 ## 🚀 Key Features
 
 - 🏆 **Multi-Resume Candidate Ranking & Best Pick**: Upload and compare multiple resumes against a single job opening to generate an objective **Leaderboard** and automatically pick the **#1 Best Match** with strengths and comparative trade-offs.
-- 📑 **Robust PDF Parsing**: Extracts text cleanly from PDF resumes without data corruption using `pypdf`.
+- 📑 **Multi-Format Document Parsing**: Extracts text cleanly from **PDF (`.pdf`)**, **Microsoft Word (`.docx`, `.doc`)**, and **Plain Text (`.txt`)** resumes without data corruption.
 - 🧠 **Structured Entity Extraction**: Uses Google Gemini to reliably extract structured entities (Skills, Work History, Education, Projects, and Certifications).
 - ⚖️ **Dynamic 6-Dimensional Scoring (100 Pts)**:
   - **Required Skills Match (40 pts)**: Exact & semantic verification of mandatory job competencies.

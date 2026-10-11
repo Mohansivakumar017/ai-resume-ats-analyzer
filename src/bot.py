@@ -184,23 +184,27 @@ async def handle_document(update: Update, context: ContextTypes.DEFAULT_TYPE):
     file_name = doc.file_name or "Resume.pdf"
     mime = (doc.mime_type or "").lower()
 
-    # Validate that it is a PDF file
-    is_pdf = file_name.lower().endswith(".pdf") or "pdf" in mime
-    if not is_pdf:
+    # Supported document extensions
+    supported_exts = (".pdf", ".docx", ".doc", ".txt", ".rtf")
+    file_ext = Path(file_name).suffix.lower()
+    is_supported = file_ext in supported_exts or any(kw in mime for kw in ["pdf", "word", "document", "text"])
+
+    if not is_supported:
         await update.message.reply_text(
             f"❌ <b>Unsupported format:</b> <code>{html.escape(file_name)}</code>\n\n"
-            "Please upload your resume as a <b>PDF document</b>.",
+            "Please upload your resume as a <b>PDF</b> (<code>.pdf</code>) or <b>Word document</b> (<code>.docx</code>).",
             parse_mode=constants.ParseMode.HTML
         )
         return
 
     # Check file size (max 20MB)
     if doc.file_size and doc.file_size > 20 * 1024 * 1024:
-        await update.message.reply_text("❌ PDF file size exceeds 20MB limit.")
+        await update.message.reply_text("❌ File size exceeds 20MB limit.")
         return
 
-    # Create secure temporary file
-    with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tf:
+    # Create secure temporary file preserving original extension
+    temp_suffix = file_ext if file_ext in supported_exts else ".pdf"
+    with tempfile.NamedTemporaryFile(suffix=temp_suffix, delete=False) as tf:
         temp_path = tf.name
 
     try:

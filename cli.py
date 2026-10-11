@@ -127,9 +127,10 @@ def run_ranking_cli(resume_paths: list, jd_path: Path, export_path: Path = None)
         print(f"Error: Job description file '{jd_path}' does not exist.")
         sys.exit(1)
 
-    valid_paths = [str(p) for p in resume_paths if Path(p).is_file() and str(p).lower().endswith(".pdf")]
+    supported = (".pdf", ".docx", ".doc", ".txt")
+    valid_paths = [str(p) for p in resume_paths if Path(p).is_file() and Path(p).suffix.lower() in supported]
     if len(valid_paths) < 1:
-        print("Error: No valid PDF resumes provided for ranking.")
+        print("Error: No valid resumes (.pdf, .docx, .txt) provided for ranking.")
         sys.exit(1)
 
     with open(jd_path, "r", encoding="utf-8") as f:
